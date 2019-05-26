@@ -1,4 +1,5 @@
 package assignment2;
+import java.io.File;
 import java.util.Scanner;
 /*
  @author mmaaz
@@ -11,10 +12,10 @@ class Node {
     char c2;
     int prevRow=0;
     int prevCol=0;
-    String pos;
+    String prevPos;
     Node next;
     public String toString() {
-        String s = "Row, Column: (" + this.row + ", " + this.column + ")\nCost: " + this.cost + "\nCharacters: (" + this.c1 + ", " + this.c2 + ") \nPrevious: (" + this.prevRow + ", "+ this.prevCol+ ")\n\n";
+        String s = "Row, Column: (" + this.row + ", " + this.column + ")\nCost: " + this.cost + "\nCharacters: (" + this.c1 + ", " + this.c2 + ") \nPrevious: (" + this.prevRow + ", "+ this.prevCol+ ")\n" + this.prevPos+"\n\n";
         return s;
     }
 }
@@ -70,29 +71,32 @@ public class EditDistance {
         char[] str2 = b.toCharArray();
         for (int i = 1; i < ed.table.length; i++) {
             for (int j = 1; j < ed.table[i].length; j++) {
-                if (str1[i - 1] == str2[j - 1]) {
+                if (i == 1) {
+                    ed.table[i][j].cost = j-1;
+                    ed.table[i][j].prevRow = i;
+                    ed.table[i][j].prevCol = j - 1;
+                    ed.table[i][j].prevPos= "R";
+                } else if (j == 1) {
+                    ed.table[i][j].cost = i-1;
+                    ed.table[i][j].prevRow = i - 1;
+                    ed.table[i][j].prevCol = j;
+                    ed.table[i][j].prevPos= "U";
+                }
+                else if (str1[i - 1] == str2[j - 1]) {
                     ed.table[i][j].cost = ed.table[i - 1][j - 1].cost;
                     ed.table[i][j].prevRow = i - 1;
                     ed.table[i][j].prevCol = j - 1;
-                }
-                else if (i == 1) {
-                    ed.table[i][j].cost = j;
-                    ed.table[i][j].prevRow = i;
-                    ed.table[i][j].prevCol = j - 1;
-                } else if (j == 1) {
-                    ed.table[i][j].cost = i;
-                    ed.table[i][j].prevRow = i - 1;
-                    ed.table[i][j].prevCol = j;
+                    ed.table[i][j].prevPos= "D";
                 }
                 else{
                     ed.table[i][j].cost = Math.min(Math.min(2 + ed.table[i - 1][j].cost, 2 + ed.table[i][j - 1].cost), 1 + ed.table[i - 1][j - 1].cost);
                     int minval= ed.table[i][j].cost;
                     String [] minLoc= minLoc(i,j, minval, ed.table).split(" ");
-                    //System.out.println(minLoc[0] + minLoc[1]);
                     ed.table[i][j].prevRow= Integer.parseInt(minLoc[0]);
                     ed.table[i][j].prevCol= Integer.parseInt(minLoc[1]);
+                    ed.table[i][j].prevPos= "D";
                 }
-                ed.table[i][j].c1 = str1[i - 1];
+                ed.table[i][j].c1 = str1[i - 1]; //CANT DO THIS AS not all letters match
                 ed.table[i][j].c2 = str2[j - 1];
                 ed.table[i][j].row = i;
                 ed.table[i][j].column = j;
@@ -107,7 +111,7 @@ public class EditDistance {
             i=ed.table[i][j].prevRow;
             j=ed.table[i][j].prevCol;
         }
-        //System.out.println(optimal);
+        System.out.println(optimal);
         for (int k = 0; k < ed.table.length; k++) {
             for (int l = 0; l < ed.table[k].length; l++) {
                 System.out.print(ed.table[k][l].cost + "\t");
@@ -140,12 +144,15 @@ public class EditDistance {
     }
         return loc;
     }
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         char[] c = "Snowy".toCharArray();
         char[] d = "Sunny".toCharArray();
         Scanner in = new Scanner(System.in);
-        String a = in.next();
-        String b = in.next();
+        Scanner read = new Scanner (new File("D:\\Programming\\DAA Online\\Assignments\\Assignment2\\sequence\\gene57.txt"));
+        read.useDelimiter("\n");
+        
+            String a = read.next();
+            String b = read.next();
         System.out.println(EditDistance.match(a, b));
 
     }
