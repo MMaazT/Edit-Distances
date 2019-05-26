@@ -127,20 +127,19 @@ public class EditDistance {
         if(minVal-2==table[i-1][j].cost){
             mini=i-1;
             minj=j;
-            loc=minj + " " + minj;   
-            return loc;
+            loc=mini + " " + minj;   
         }
         else if(minVal-2==table[i][j-1].cost){
             mini=i;
             minj=j-1;
-            loc=minj + " " + minj; 
-            return loc;
+            loc=mini + " " + minj; 
+            //return loc;
         }
         else if(minVal-1==table[i-1][j-1].cost){
             mini=i-1;
             minj=j-1;
-            loc=minj + " " + minj; 
-            return loc;    
+            loc=mini + " " + minj; 
+            //return loc;    
     }
         return loc;
     }
