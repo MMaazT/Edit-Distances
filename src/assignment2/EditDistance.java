@@ -8,11 +8,13 @@ class Node {
     int row;
     int column;
     int cost;
+    int pairWiseCost;
     char c1;
     char c2;
     int prevRow=0;
     int prevCol=0;
     String prevPos;
+    boolean inPath=false;
     Node next;
     public String toString() {
         String s = "Row, Column: (" + this.row + ", " + this.column + ")\nCost: " + this.cost + "\nCharacters: (" + this.c1 + ", " + this.c2 + ") \nPrevious: (" + this.prevRow + ", "+ this.prevCol+ ")\n" + this.prevPos+"\n\n";
@@ -69,35 +71,31 @@ public class EditDistance {
         Path optimal = new Path();
         char[] str1 = a.toCharArray();
         char[] str2 = b.toCharArray();
-        for (int i = 1; i < ed.table.length; i++) {
-            for (int j = 1; j < ed.table[i].length; j++) {
-                if (i == 1) {
-                    ed.table[i][j].cost = j-1;
-                    ed.table[i][j].prevRow = i;
-                    ed.table[i][j].prevCol = j - 1;
-                    ed.table[i][j].prevPos= "R";
-                } else if (j == 1) {
-                    ed.table[i][j].cost = i-1;
-                    ed.table[i][j].prevRow = i - 1;
-                    ed.table[i][j].prevCol = j;
-                    ed.table[i][j].prevPos= "U";
+        for (int i = 0; i < ed.table.length; i++) {
+            for (int j = 0; j < ed.table[i].length; j++) {
+                if (i == 0) {
+                    ed.table[i][j].cost = j;
+                    ed.table[i][j].prevRow = -1;
+                    ed.table[i][j].prevCol = j-1;
+                    ed.table[i][j].prevPos= "L+2";
+                } else if (j == 0) {
+                    ed.table[i][j].cost = i;
+                    ed.table[i][j].prevRow = i-1;
+                    ed.table[i][j].prevCol = -1;
+                    ed.table[i][j].prevPos= "U+2";
                 }
                 else if (str1[i - 1] == str2[j - 1]) {
                     ed.table[i][j].cost = ed.table[i - 1][j - 1].cost;
                     ed.table[i][j].prevRow = i - 1;
                     ed.table[i][j].prevCol = j - 1;
-                    ed.table[i][j].prevPos= "D";
+                    ed.table[i][j].prevPos= "D+0";
                 }
                 else{
-                    ed.table[i][j].cost = Math.min(Math.min(2 + ed.table[i - 1][j].cost, 2 + ed.table[i][j - 1].cost), 1 + ed.table[i - 1][j - 1].cost);
-                    int minval= ed.table[i][j].cost;
-                    String [] minLoc= minLoc(i,j, minval, ed.table).split(" ");
+                    ed.table[i][j].cost = Math.min(Math.min(2 + ed.table[i - 1][j].cost, 2 + ed.table[i][j - 1].cost), 1+ ed.table[i - 1][j - 1].cost);
+                    String [] minLoc= minLoc(i,j, ed.table).split(" ");
                     ed.table[i][j].prevRow= Integer.parseInt(minLoc[0]);
                     ed.table[i][j].prevCol= Integer.parseInt(minLoc[1]);
-                    ed.table[i][j].prevPos= "D";
                 }
-                ed.table[i][j].c1 = str1[i - 1]; //CANT DO THIS AS not all letters match
-                ed.table[i][j].c2 = str2[j - 1];
                 ed.table[i][j].row = i;
                 ed.table[i][j].column = j;
             }
@@ -105,49 +103,103 @@ public class EditDistance {
         Node path = ed.table[ed.table.length - 1][ed.table[0].length - 1];
         int i = ed.table.length - 1;
         int j = ed.table[0].length - 1;
+        path.inPath=true;
         optimal.insert(path);
-        while (i > 0 || j > 0) {
+        int count=0;
+        while (i >0 && j >0) {
             optimal.insert(ed.table[ed.table[i][j].prevRow][ed.table[i][j].prevCol]);
+            ed.table[ed.table[i][j].prevRow][ed.table[i][j].prevCol].inPath=true;
             i=ed.table[i][j].prevRow;
             j=ed.table[i][j].prevCol;
+            count++;
         }
         System.out.println(optimal);
-        for (int k = 0; k < ed.table.length; k++) {
-            for (int l = 0; l < ed.table[k].length; l++) {
-                System.out.print(ed.table[k][l].cost + "\t");
+        for (int k = 1; k < ed.table.length; k++) {
+            for (int l = 1; l < ed.table[k].length; l++) {
+                System.out.print(ed.table[k][l].cost + "\\" + ed.table[k][l].prevPos + "\\" + ed.table[k][l].inPath+"\t");
             }
             System.out.println();
         }
+        //System.out.println(count);
+        //pairwise(optimal, a,b);
         return ed.table[ed.table.length - 1][ed.table[0].length - 1].cost;
     }
-    public static String minLoc(int i, int j, int minVal, Node [][] table){
-        int mini;
-        int minj;
-        String loc="";
-        if(minVal-2==table[i-1][j].cost){
-            mini=i-1;
-            minj=j;
-            loc=mini + " " + minj;   
+     public static void pairwise(Path p,  String a, String b){
+            Node n= p.head;
+            char arr1 []= new char [a.length()];
+            char arr2 []=new char[a.length()];
+            int cos []= new int[Math.max(a.length(), b.length())];
+            int i= a.length()-1;
+            int j= b.length()-1;
+            while(i>=0 && j>=0){
+                if(n.prevPos=="D+0"){
+                    arr1[i]=a.charAt(i);
+                    arr2[i]=b.charAt(j);
+                    n.c1=a.charAt(i);
+                    n.c2=b.charAt(j);
+                    n.pairWiseCost=0;
+                    cos[i]=0;
+                    i-=1;
+                    j-=1;
+                    n=n.next;
+                }
+                else if(n.prevPos=="D+1"){
+                    arr1[i]=a.charAt(i);
+                    arr2[i]=b.charAt(j);
+                    n.c1=a.charAt(i);
+                    n.c2=b.charAt(j);
+                    n.pairWiseCost=1;
+                    cos[i]=1;
+                    i-=1;
+                    j-=1;
+                    n=n.next;
+                }
+                else if(n.prevPos=="U+2"){
+                    arr1[i]= '-';
+                    arr2[i]=b.charAt(j);
+                    n.c1='-';
+                    n.c2=b.charAt(j);
+                    n.pairWiseCost=2;
+                    cos[i]=2;
+                    j-=1;
+                    n=n.next;
+                }
+                else if(n.prevPos=="L+2"){
+                    arr1[i]= a.charAt(i);
+                    arr2[i]='-';
+                    n.c1=a.charAt(i);
+                    n.c2='-';
+                    n.pairWiseCost=2;
+                    i-=1;
+                    cos[i]=2;
+                    n=n.next;
+                }
+            }
+            for (int k = 0; k < a.length(); k++) {
+                System.out.println(arr1[k]+ " "+ arr2[k]+ " "+ cos[k]);
+         }
         }
-        else if(minVal-2==table[i][j-1].cost){
-            mini=i;
-            minj=j-1;
-            loc=mini + " " + minj; 
-            //return loc;
+    public static String minLoc(int i, int j,  Node [][] table){
+        String smallest="";
+        if(table[i-1][j].cost+2<= table[i-1][j-1].cost+1 && table[i-1][j].cost+2<= table[i][j-1].cost+2){
+            smallest= (i-1)+ " " + j;
+            table[i][j].prevPos= "U+2";
         }
-        else if(minVal-1==table[i-1][j-1].cost){
-            mini=i-1;
-            minj=j-1;
-            loc=mini + " " + minj; 
-            //return loc;    
+        else if(table[i][j-1].cost+2<= table[i-1][j-1].cost+1 && table[i][j-1].cost+2<= table[i-1][j].cost+2){
+            smallest= (i)+ " " + (j-1);
+            table[i][j].prevPos= "L+2";
+        }
+        else{
+            smallest= (i-1)+ " " + (j-1);
+            table[i][j].prevPos= "D+1";
     }
-        return loc;
-    }
+        return smallest;
+    }   
     public static void main(String[] args) throws Exception {
         char[] c = "Snowy".toCharArray();
         char[] d = "Sunny".toCharArray();
         Scanner in = new Scanner(System.in);
-        Scanner read = new Scanner (new File("D:\\Programming\\DAA Online\\Assignments\\Assignment2\\sequence\\gene57.txt"));
+        Scanner read = new Scanner (new File("D:\\Programming\\DAA Online\\Assignments\\Assignment2\\sequence\\"+ in.next()));
         read.useDelimiter("\n");
         
             String a = read.next();
