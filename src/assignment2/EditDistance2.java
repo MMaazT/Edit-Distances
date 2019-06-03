@@ -63,10 +63,12 @@ public class EditDistance2 {
         for (int i = 0; i< ed.cost.length; i++) {
             for (int j = 0; j < ed.cost[0].length; j++) {
                 if(i==0){
-                    ed.cost[i][j]=j;
+                    if(j!=0)
+                        ed.cost[i][j]=ed.cost[i][j-1]+2;
+                    else ed.cost[i][j]=0;
                 }
-                else if (j==0){
-                    ed.cost[i][j]=i;
+                else if (j==0 && i!=0){
+                    ed.cost[i][j]=ed.cost[i-1][j]+2;
                 }
                 else if (a.charAt(i-1)==b.charAt(j-1)){
                     ed.cost[i][j]=ed.cost[i-1][j-1];
@@ -114,29 +116,37 @@ public class EditDistance2 {
         n.column=j;
         n.cost=ed.cost[i][j];
         optimal.insert(n);
-        //System.out.println(ed.cost[ed.cost.length-1][ed.cost[0].length-1]);        
+        //System.out.println(ed.cost[ed.cost.length-1][ed.cost[0].length-1]); 
+        
+        //pairwise cost printing
         int ai=0;
         int bj=0;
         String aux= ed.operations;
         String pairwise= "EditDistance= " + ed.cost[ed.cost.length-1][ed.cost[0].length-1]+ "\n";
-        while (ai<aux.length() && bj < b.length()){            
-            if(aux.charAt(ai)=='N'){
+        //System.out.println(ed.operations+ " ");
+        int t=0;
+        while (t<a.length()){            
+            if(aux.charAt(t)=='N'){
                 pairwise+= a.charAt(ai)+ " "+ b.charAt(bj)+ " " +"0\n";
                 ai++;
                 bj++;
+                t++;
             }
-            else if (aux.charAt(ai)=='S'){
+            else if (aux.charAt(t)=='S'){
                 pairwise+= a.charAt(ai)+ " "+ b.charAt(bj)+ " " +"1\n";
                 ai++;
                 bj++;
+                t++;
             }
-            else if(aux.charAt(ai)=='I'){
+            else if(aux.charAt(t)=='I'){
                 pairwise+= a.charAt(ai)+ " "+ "-"+ " " +"2\n";
                 ai++;
+                t++;
             }
-            else{
+            else if (aux.charAt(t)=='D'){
                 pairwise+= "-"+ " "+ b.charAt(bj)+ " " +"2\n";
                 bj++;
+                t++;
             }
         }
         System.out.print(pairwise);
